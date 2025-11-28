@@ -1,7 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { create, getAll, update } from "@/services/api/companiesService";
-import userService from "@/services/api/userService";
 import profileService from "@/services/api/profileService";
 import ApperIcon from "@/components/ApperIcon";
 import Loading from "@/components/ui/Loading";
@@ -17,8 +16,7 @@ function Settings() {
   const tabs = [
     { id: 'profile', label: 'My Profile', icon: 'User' },
     { id: 'company', label: 'Company Profile', icon: 'Building2' },
-    { id: 'users', label: 'User Management', icon: 'Users' },
-    { id: 'subscription', label: 'Subscription', icon: 'CreditCard' }
+{ id: 'subscription', label: 'Subscription', icon: 'CreditCard' }
   ];
 
   return (
@@ -52,7 +50,6 @@ function Settings() {
       <div className="min-h-96">
         {activeTab === 'profile' && <MyProfileTab />}
         {activeTab === 'company' && <CompanyProfileTab />}
-        {activeTab === 'users' && <UserManagementTab />}
         {activeTab === 'subscription' && <SubscriptionTab />}
       </div>
     </div>
@@ -488,647 +485,258 @@ const handleChange = (field, value) => {
     </div>
   );
 }
-
-// User Management Tab Component
-// User Management Tab Component
-function UserManagementTab() {
-const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [editUser, setEditUser] = useState(null);
-  const loadUsers = async () => {
-    try {
-      const data = await userService.getAll();
-      setUsers(data);
-    } catch (error) {
-      toast.error('Failed to load users');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
-  const handleRemoveUser = async (userId) => {
-    if (!confirm('Are you sure you want to remove this user?')) return;
-    
-    try {
-      await userService.delete(userId);
-      setUsers(prev => prev.filter(user => user.Id !== userId));
-      toast.success('User removed successfully');
-    } catch (error) {
-      toast.error('Failed to remove user');
-    }
-  };
-const handleEditUser = (user) => {
-    setEditUser(user);
-  };
-
-  const handleUserUpdated = async () => {
-    setEditUser(null);
-    await loadUsers();
-  };
-  const getRoleBadgeVariant = (role) => {
-    switch (role) {
-      case 'admin': return 'default';
-      case 'manager': return 'secondary';
-      case 'user': return 'outline';
-      default: return 'outline';
-    }
-  };
-
-  if (loading) return <Loading />;
-
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">Team Members</h2>
-          <p className="text-sm text-gray-600 mt-1">Manage users and their permissions</p>
-        </div>
-        <Button onClick={() => setShowInviteModal(true)}>
-          <ApperIcon name="UserPlus" size={16} />
-          Invite User
-        </Button>
-      </div>
-
-      <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  User
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Last Active
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user) => (
-                <tr key={user.Id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-sm font-medium">
-                        {user.firstName[0]}{user.lastName[0]}
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {user.firstName} {user.lastName}
-                        </div>
-                        <div className="text-sm text-gray-500">{user.email}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Badge variant={getRoleBadgeVariant(user.role)}>
-                      {user.role}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      user.status === 'active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {user.lastActive}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center justify-end gap-2">
-<Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditUser(user)}
-                      >
-                        <ApperIcon name="Edit" size={14} />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRemoveUser(user.Id)}
-                        className="text-red-600 hover:text-red-700 hover:border-red-300"
-                      >
-                        <ApperIcon name="Trash2" size={14} />
-                        Remove
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-
-      {/* Invite User Modal */}
-      {showInviteModal && (
-        <InviteUserModal 
-          onClose={() => setShowInviteModal(false)}
-onUserInvited={loadUsers}
-        />
-      )}
-
-      {/* Edit User Modal */}
-      {editUser && (
-        <EditUserModal 
-          user={editUser}
-          onClose={() => setEditUser(null)}
-          onUserUpdated={handleUserUpdated}
-        />
-      )}
-    </div>
-  );
-}
-
-// Edit User Modal Component
-function EditUserModal({ user, onClose, onUserUpdated }) {
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: user.email || '',
-    role: user.role || 'user',
-    firstName: user.firstName || '',
-    lastName: user.lastName || ''
-  });
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await userService.update(user.Id, formData);
-      toast.success('User updated successfully');
-      onUserUpdated();
-    } catch (error) {
-      toast.error('Failed to update user');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Edit User</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <ApperIcon name="X" size={20} />
-          </button>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="space-y-4">
-            <Input
-              type="email"
-              label="Email Address"
-              value={formData.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-              required
-            />
-            
-            <div className="grid grid-cols-2 gap-3">
-              <Input
-                label="First Name"
-                value={formData.firstName}
-                onChange={(e) => handleChange('firstName', e.target.value)}
-                required
-              />
-              <Input
-                label="Last Name"
-                value={formData.lastName}
-                onChange={(e) => handleChange('lastName', e.target.value)}
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-              <select
-                value={formData.role}
-                onChange={(e) => handleChange('role', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-              >
-                <option value="user">User</option>
-                <option value="manager">Manager</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-          </div>
-          
-          <div className="flex justify-end gap-3 mt-6">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? <ApperIcon name="Loader2" size={16} className="animate-spin" /> : null}
-              Save Changes
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
 // Subscription Tab Component
 function SubscriptionTab() {
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const downloadSubscriptionData = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Generate subscription data
-      const subscriptionData = [
-        ['Date', 'Plan', 'Amount', 'Status', 'Invoice'],
-        ['2024-01-15', 'Professional', '$49.00', 'Paid', 'INV-2024-001'],
-        ['2023-12-15', 'Professional', '$49.00', 'Paid', 'INV-2023-012'],
-        ['2023-11-15', 'Professional', '$49.00', 'Paid', 'INV-2023-011'],
-        ['2023-10-15', 'Professional', '$49.00', 'Paid', 'INV-2023-010'],
-        ['2023-09-15', 'Professional', '$49.00', 'Paid', 'INV-2023-009'],
-        ['', '', '', '', ''],
-        ['Usage Statistics', '', '', '', ''],
-        ['Total Users', '12', '', '', ''],
-        ['Active Pipelines', '8', '', '', ''],
-        ['Deals Closed', '156', '', '', ''],
-        ['Storage Used', '2.3 GB', '', '', ''],
-      ];
-      
-      // Convert to CSV
-      const csvContent = subscriptionData
-        .map(row => row.map(cell => `"${cell}"`).join(','))
-        .join('\n');
-      
-      // Create and trigger download
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `subscription-data-${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      toast.success('Subscription data downloaded successfully');
-    } catch (error) {
-      toast.error('Failed to download subscription data');
-    } finally {
-setIsLoading(false);
-    }
-  };
-
-  // Subscription data and handlers at component level
-  const subscription = {
-    plan: 'Professional',
-    status: 'active',
+  const [loading, setLoading] = useState(false);
+  const [currentPlan, setCurrentPlan] = useState({
+    name: 'Professional',
+    price: 29,
+    billing: 'monthly',
+    features: [
+      'Up to 10 team members',
+      'Advanced analytics',
+      'Priority support',
+      'Custom integrations'
+    ],
     nextBilling: '2024-02-15',
-    amount: '$49.99',
-    users: 12,
-    maxUsers: 25,
-    storage: '8.2 GB',
-    maxStorage: '100 GB'
-  };
+    status: 'active'
+  });
 
-  const handleUpdateBilling = async () => {
-    try {
-      setIsLoading(true);
-      toast.info('Redirecting to billing management...', {
-        position: "top-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-
-      // Simulate billing portal redirect
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // In a real implementation, this would redirect to Stripe/payment provider
-      window.open('https://billing.stripe.com/login', '_blank');
-      
-      toast.success('Billing portal opened successfully', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-    } catch (error) {
-      toast.error('Failed to access billing management. Please try again.', {
-        position: "top-right",
-        autoClose: 4000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-    } finally {
-      setIsLoading(false);
+  const plans = [
+    {
+      id: 'basic',
+      name: 'Basic',
+      price: 9,
+      description: 'Perfect for small teams getting started',
+      features: [
+        'Up to 3 team members',
+        'Basic analytics',
+        'Email support',
+        'Standard integrations'
+      ]
+    },
+    {
+      id: 'professional',
+      name: 'Professional',
+      price: 29,
+      description: 'Great for growing businesses',
+      features: [
+        'Up to 10 team members',
+        'Advanced analytics',
+        'Priority support',
+        'Custom integrations'
+      ],
+      popular: true
+    },
+    {
+      id: 'enterprise',
+      name: 'Enterprise',
+      price: 99,
+      description: 'For large organizations with advanced needs',
+      features: [
+        'Unlimited team members',
+        'Enterprise analytics',
+        'Dedicated support',
+        'Custom solutions'
+      ]
     }
-  };
+  ];
 
-  const handleUpgradePlan = async () => {
+  const handlePlanChange = async (planId) => {
+    setLoading(true);
     try {
-      setIsLoading(true);
-      toast.info('Loading upgrade options...', {
-        position: "top-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-
-      // Simulate upgrade process
-      await new Promise(resolve => setTimeout(resolve, 2500));
-      
-      // In a real implementation, this would show upgrade modal or redirect
-      const confirmed = window.confirm(
-        'Upgrade to Pro Plan?\n\n• Unlimited contacts and deals\n• Advanced analytics\n• Premium support\n\n$29/month'
-      );
-      
-      if (confirmed) {
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        toast.success('Plan upgrade initiated! Check your email for confirmation.', {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-      } else {
-        toast.info('Plan upgrade cancelled', {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
+      // Simulate API call for plan change
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      const selectedPlan = plans.find(p => p.id === planId);
+      if (selectedPlan) {
+        setCurrentPlan(prev => ({
+          ...prev,
+          name: selectedPlan.name,
+          price: selectedPlan.price
+        }));
+        toast.success(`Successfully upgraded to ${selectedPlan.name} plan`);
       }
     } catch (error) {
-      toast.error('Failed to load upgrade options. Please try again.', {
-        position: "top-right",
-        autoClose: 4000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      toast.error('Failed to change subscription plan');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('Are you sure you want to cancel your subscription? This action cannot be undone.')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Simulate API call for cancellation
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setCurrentPlan(prev => ({ ...prev, status: 'cancelled' }));
+      toast.success('Subscription cancelled successfully');
+    } catch (error) {
+      toast.error('Failed to cancel subscription');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-4xl">
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">Subscription & Billing</h2>
-        <p className="text-sm text-gray-600 mt-1">Manage your subscription and view usage</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Current Plan */}
-        <div className="lg:col-span-2">
-          <Card className="p-6">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Current Plan</h3>
-                <p className="text-sm text-gray-600">Your subscription details</p>
-              </div>
-              <Badge variant="default">{subscription.status}</Badge>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Plan</span>
-                <span className="text-sm font-medium">{subscription.plan}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Monthly Cost</span>
-                <span className="text-sm font-medium">{subscription.amount}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Next Billing</span>
-                <span className="text-sm font-medium">{subscription.nextBilling}</span>
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <Button variant="outline" onClick={handleUpdateBilling}>
-                <ApperIcon name="CreditCard" size={16} />
-                Update Billing
-              </Button>
-              <Button onClick={handleUpgradePlan}>
-                <ApperIcon name="ArrowUp" size={16} />
-                Upgrade Plan
-              </Button>
-            </div>
-          </Card>
+    <div className="max-w-4xl space-y-6">
+      {/* Current Plan */}
+      <Card className="p-6">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900">Current Plan</h2>
+          <p className="text-sm text-gray-600 mt-1">Manage your subscription and billing</p>
         </div>
 
-        {/* Usage Stats */}
-        <div>
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Usage</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-600">Users</span>
-                  <span className="font-medium">{subscription.users}/{subscription.maxUsers}</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-primary h-2 rounded-full" 
-                    style={{ width: `${(subscription.users / subscription.maxUsers) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-600">Storage</span>
-                  <span className="font-medium">{subscription.storage}/{subscription.maxStorage}</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-accent h-2 rounded-full" 
-                    style={{ width: '8%' }}
-                  ></div>
-                </div>
-              </div>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <h3 className="text-xl font-semibold text-gray-900">{currentPlan.name}</h3>
+              <Badge variant={currentPlan.status === 'active' ? 'success' : 'destructive'}>
+                {currentPlan.status === 'active' ? 'Active' : 'Cancelled'}
+              </Badge>
             </div>
-          </Card>
+            <p className="text-2xl font-bold text-primary">
+              ${currentPlan.price}<span className="text-sm font-normal text-gray-600">/month</span>
+            </p>
+            {currentPlan.status === 'active' && (
+              <p className="text-sm text-gray-600 mt-1">
+                Next billing date: {new Date(currentPlan.nextBilling).toLocaleDateString()}
+              </p>
+            )}
+          </div>
+          <div className="text-right">
+            <Button 
+              variant="outline" 
+              onClick={handleCancelSubscription}
+              disabled={loading || currentPlan.status !== 'active'}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              {loading ? (
+                <ApperIcon name="Loader2" size={16} className="animate-spin" />
+              ) : (
+                <ApperIcon name="X" size={16} />
+              )}
+              Cancel Subscription
+            </Button>
+          </div>
         </div>
-      </div>
 
-      {/* Billing History */}
-      <Card className="mt-6">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Billing History</h3>
-        </div>
-        <div className="p-6">
-          <div className="space-y-3">
-            {[
-              { date: '2024-01-15', amount: '$49.99', status: 'paid' },
-              { date: '2023-12-15', amount: '$49.99', status: 'paid' },
-              { date: '2023-11-15', amount: '$49.99', status: 'paid' }
-            ].map((invoice, index) => (
-              <div key={index} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
-                <div>
-                  <span className="text-sm font-medium">{invoice.date}</span>
-                  <span className="text-sm text-gray-600 ml-3">{invoice.amount}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Badge variant="default">Paid</Badge>
-<Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={downloadSubscriptionData}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <ApperIcon name="Loader2" size={14} className="animate-spin" />
-                    ) : (
-                      <ApperIcon name="Download" size={14} />
-                    )}
-                    {isLoading ? 'Downloading...' : 'Download'}
-                  </Button>
-                </div>
+        <div className="mb-6">
+          <h4 className="font-medium text-gray-900 mb-3">Current Plan Features</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {currentPlan.features.map((feature, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <ApperIcon name="Check" size={16} className="text-green-600" />
+                <span className="text-sm text-gray-700">{feature}</span>
               </div>
             ))}
           </div>
         </div>
       </Card>
-    </div>
-  );
-}
 
-// Invite User Modal Component
-function InviteUserModal({ onClose, onUserInvited }) {
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    role: 'user',
-    firstName: '',
-    lastName: ''
-  });
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await userService.create(formData);
-      toast.success('User invitation sent successfully');
-      onUserInvited();
-      onClose();
-    } catch (error) {
-      toast.error('Failed to send invitation');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Invite User</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <ApperIcon name="X" size={20} />
-          </button>
+      {/* Available Plans */}
+      <Card className="p-6">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900">Available Plans</h2>
+          <p className="text-sm text-gray-600 mt-1">Choose the plan that best fits your needs</p>
         </div>
-        
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="space-y-4">
-            <Input
-              type="email"
-              label="Email Address"
-              value={formData.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-              required
-            />
-            
-            <div className="grid grid-cols-2 gap-3">
-              <Input
-                label="First Name"
-                value={formData.firstName}
-                onChange={(e) => handleChange('firstName', e.target.value)}
-                required
-              />
-              <Input
-                label="Last Name"
-                value={formData.lastName}
-                onChange={(e) => handleChange('lastName', e.target.value)}
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-              <select
-                value={formData.role}
-                onChange={(e) => handleChange('role', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {plans.map((plan) => (
+            <div 
+              key={plan.id}
+              className={`relative border rounded-lg p-6 ${
+                plan.popular ? 'border-primary ring-2 ring-primary ring-opacity-20' : 'border-gray-200'
+              } ${currentPlan.name.toLowerCase() === plan.name.toLowerCase() ? 'bg-gray-50' : 'bg-white'}`}
+            >
+              {plan.popular && (
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <Badge className="bg-primary text-white">Most Popular</Badge>
+                </div>
+              )}
+              
+              <div className="text-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">{plan.name}</h3>
+                <p className="text-sm text-gray-600 mb-3">{plan.description}</p>
+                <div className="mb-4">
+                  <span className="text-3xl font-bold text-gray-900">${plan.price}</span>
+                  <span className="text-sm text-gray-600">/month</span>
+                </div>
+              </div>
+
+              <ul className="space-y-2 mb-6">
+                {plan.features.map((feature, index) => (
+                  <li key={index} className="flex items-center gap-2 text-sm">
+                    <ApperIcon name="Check" size={14} className="text-green-600" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+
+              <Button 
+                className="w-full"
+                variant={currentPlan.name.toLowerCase() === plan.name.toLowerCase() ? 'outline' : 'default'}
+                disabled={currentPlan.name.toLowerCase() === plan.name.toLowerCase() || loading}
+                onClick={() => handlePlanChange(plan.id)}
               >
-                <option value="user">User</option>
-                <option value="manager">Manager</option>
-                <option value="admin">Admin</option>
-              </select>
+                {loading ? (
+                  <ApperIcon name="Loader2" size={16} className="animate-spin" />
+                ) : currentPlan.name.toLowerCase() === plan.name.toLowerCase() ? (
+                  'Current Plan'
+                ) : (
+                  `Upgrade to ${plan.name}`
+                )}
+              </Button>
             </div>
-          </div>
-          
-          <div className="flex justify-end gap-3 mt-6">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? <ApperIcon name="Loader2" size={16} className="animate-spin" /> : null}
-              Send Invitation
-            </Button>
-          </div>
-        </form>
-      </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Billing History */}
+      <Card className="p-6">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900">Billing History</h2>
+          <p className="text-sm text-gray-600 mt-1">View your past invoices and payments</p>
+        </div>
+
+        <div className="space-y-3">
+          {[
+            { date: '2024-01-15', amount: 29, status: 'paid', invoice: 'INV-2024-001' },
+            { date: '2023-12-15', amount: 29, status: 'paid', invoice: 'INV-2023-012' },
+            { date: '2023-11-15', amount: 29, status: 'paid', invoice: 'INV-2023-011' },
+          ].map((transaction, index) => (
+            <div key={index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                  <ApperIcon name="Check" size={14} className="text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{transaction.invoice}</p>
+                  <p className="text-xs text-gray-600">{new Date(transaction.date).toLocaleDateString()}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">${transaction.amount}</p>
+                <Badge variant="success" className="text-xs">Paid</Badge>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <Button variant="outline" className="text-sm">
+            <ApperIcon name="Download" size={14} />
+            Download All Invoices
+          </Button>
+        </div>
+      </Card>
     </div>
   );
 }
+
+// User Management Tab Component
 
 export default Settings;
